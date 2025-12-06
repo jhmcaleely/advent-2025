@@ -1,0 +1,14 @@
+import("gpio");
+import("timer");
+
+const blocky_LED = 0d14;
+gpio_init(blocky_LED);
+gpio_set_direction(blocky_LED, GPIO_OUT);
+
+var n = 4;
+
+while (n > 0) {
+    gpio_put(blocky_LED, !gpio_get(blocky_LED));
+    sleep_ms(500);
+    n = n - 1;
+}
