@@ -1,0 +1,70 @@
+import("gpio");
+
+var any[NUM_BANK0_GPIOS] response_leds;
+var bool[NUM_BANK0_GPIOS] states;
+
+var button = make_channel();
+
+fun gpio_set_pulls(num, up, down) {
+    if (up) {
+       	poke pads_bank0.gpio[num], REG_ALIAS_SET_BITS, 0d1 << 0d3;
+    } else {
+      	print "up";
+       	poke pads_bank0.gpio[num], REG_ALIAS_CLR_BITS, 0d1 << 0d3;
+    }    
+
+    if (down) {
+       	poke pads_bank0.gpio[num], REG_ALIAS_SET_BITS, 0d1 << 0d2;
+	print "down";
+	print num;
+    } else {
+      	print "downdown";
+       	poke pads_bank0.gpio[num], REG_ALIAS_CLR_BITS, 0d1 << 0d2;
+    }    
+}
+
+fun gpio_set_pull_down(num) {
+    gpio_set_pulls(num, false, true);
+}
+
+
+fun gpio_response(num, events) {
+    print "john";
+    print num;
+    print events;
+    if (((events & GPIO_IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL) or ((events & GPIO_IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE)) {
+        share(button, num);
+    }
+}
+
+fun setup_button_led(led_io, button_io) {
+    
+    gpio_init(led_io);
+    gpio_set_direction(led_io, GPIO_OUT);
+
+    response_leds[button_io] = led_io;
+
+    gpio_init(button_io);
+    gpio_set_pull_down(button_io);
+}
+
+const gpio_led_red = 0d14;
+
+const gpio_button_red = 0d2;
+const gpio_button_green = 0d3;
+
+setup_button_led(gpio_led_red, gpio_button_red);
+setup_button_led(pico_led, gpio_button_green);
+
+gpio_set_irq_routine(gpio_response);
+
+gpio_set_irq_enabled(gpio_button_red, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+gpio_set_irq_enabled(gpio_button_green, GPIO_IRQ_EDGE_RISE, true);
+irq_set_enabled(io_irq_bank0, true);
+
+while (true) {
+    var pressed = receive(button);
+    print "hello";
+    states[pressed] = !states[pressed];
+    gpio_put(response_leds[pressed], states[pressed]);
+}
