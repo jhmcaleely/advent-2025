@@ -9,16 +9,12 @@ fun gpio_set_pulls(num, up, down) {
     if (up) {
        	poke pads_bank0.gpio[num], REG_ALIAS_SET_BITS, 0d1 << 0d3;
     } else {
-      	print "up";
        	poke pads_bank0.gpio[num], REG_ALIAS_CLR_BITS, 0d1 << 0d3;
     }    
 
     if (down) {
        	poke pads_bank0.gpio[num], REG_ALIAS_SET_BITS, 0d1 << 0d2;
-	print "down";
-	print num;
     } else {
-      	print "downdown";
        	poke pads_bank0.gpio[num], REG_ALIAS_CLR_BITS, 0d1 << 0d2;
     }    
 }
@@ -29,9 +25,6 @@ fun gpio_set_pull_down(num) {
 
 
 fun gpio_response(num, events) {
-    print "john";
-    print num;
-    print events;
     if (((events & GPIO_IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL) or ((events & GPIO_IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE)) {
         share(button, num);
     }
@@ -64,7 +57,6 @@ irq_set_enabled(io_irq_bank0, true);
 
 while (true) {
     var pressed = receive(button);
-    print "hello";
     states[pressed] = !states[pressed];
     gpio_put(response_leds[pressed], states[pressed]);
 }
